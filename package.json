@@ -1,0 +1,17 @@
+{
+  "name": "frappe_util_configs",
+  "version": "1.0.0",
+  "description": "Useful frappe features for your random purposes",
+  "main": "socketio.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.17.1",
+    "redis": "^3.0.2",
+    "socket.io": "^2.3.0",
+    "superagent": "^5.2.2"
+  }
+}
