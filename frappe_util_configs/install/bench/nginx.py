@@ -2,6 +2,7 @@ import frappe
 import os, json, click, random, string, hashlib
 from frappe_util_configs.install import get_jinja_env
 from .utils import get_sites, get_bench_name
+from six import string_types
 
 def setup_nginx(force=False):
   env = get_jinja_env()
@@ -32,7 +33,6 @@ def make_nginx_conf(bench_path, yes=False):
     "allow_rate_limiting": allow_rate_limiting,
     # for nginx map variable
     "random_string": "".join(random.choice(string.ascii_lowercase) for i in range(7)),
-    "allow_cors": config.get("allow_cors", 0),
     "do_not_redirect_http": config.get("do_not_redirect_http", 0)
   }
 
@@ -56,8 +56,10 @@ def prepare_sites(config, bench_path):
   sites = {
     "that_use_port": [],
     "that_use_dns": [],
+    "that_use_dns_with_cors": [],
     "that_use_ssl": [],
-    "that_use_wildcard_ssl": []
+    "that_use_wildcard_ssl": [],
+    "that_use_wildcard_ssl_with_cors": []
   }
 
   domain_map = {}
@@ -89,7 +91,10 @@ def prepare_sites(config, bench_path):
       site_name = domain or site['name']
 
       if site.get('wildcard'):
-        sites["that_use_wildcard_ssl"].append(site_name)
+        if site.get("allow_cors"):
+          sites["that_use_wildcard_ssl_with_cors"].append(site_name)
+        else:
+          sites["that_use_wildcard_ssl"].append(site_name)
 
         if not sites.get('wildcard_ssl_certificate'):
           sites["wildcard_ssl_certificate"] = site['ssl_certificate']
@@ -99,7 +104,10 @@ def prepare_sites(config, bench_path):
         sites["that_use_ssl"].append(site)
 
       else:
-        sites["that_use_dns"].append(site_name)
+        if site.get("allow_cors"):
+          sites["that_use_dns_with_cors"].append(site_name)
+        else:
+          sites["that_use_dns"].append(site_name)
 
     else:
       if not site.get("port"):
@@ -144,7 +152,6 @@ def prepare_sites(config, bench_path):
 
 
   sites['domain_map'] = domain_map
-
   return sites
 
 def get_sites_with_config(bench_path):
@@ -175,6 +182,7 @@ def get_sites_with_config(bench_path):
 
     ret.append({
       "name": site,
+      "allow_cors": site_config.get("allow_cors"),
       "port": site_config.get('nginx_port'),
       "ssl_certificate": site_config.get('ssl_certificate'),
       "ssl_certificate_key": site_config.get('ssl_certificate_key')
@@ -183,7 +191,7 @@ def get_sites_with_config(bench_path):
     if dns_multitenant and site_config.get('domains'):
       for domain in site_config.get('domains'):
         # domain can be a string or a dict with 'domain', 'ssl_certificate', 'ssl_certificate_key'
-        if isinstance(domain, str) or isinstance(domain, unicode):
+        if isinstance(domain, string_types):
           domain = { 'domain': domain }
 
         domain['name'] = site
