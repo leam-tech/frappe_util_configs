@@ -10,5 +10,4 @@ def on_session_creation(login_manager):
   if frappe.form_dict.get('use_jwt'):
     frappe.local.response['token'] = make_jwt(
         login_manager.user, frappe.flags.get('jwt_expire_on'))
-    frappe.wait_for_attach()
     frappe.flags.jwt_clear_cookies = True

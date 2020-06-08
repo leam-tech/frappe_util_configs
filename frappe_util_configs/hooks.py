@@ -13,6 +13,11 @@ app_license = "MIT"
 
 on_session_creation = "frappe_util_configs.on_session_creation"
 
+override_whitelisted_methods = {
+  # This is done so that we can know frappe_util_configs was installed, with no renovation_core
+  "renovation_core.utils.site.get_versions": "frappe_util_configs.utils.site.get_versions"
+}
+
 # Includes in <head>
 # ------------------
 
